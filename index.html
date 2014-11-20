@@ -7,8 +7,32 @@
     <script type="text/javascript" src="js/library/underscore.js"></script>
     <script type="text/javascript" src="js/library/backbone.js"></script>
     <script type="text/javascript" src="js/code/modelBackbone.js"></script>
+    <script type ="text/javascript" >
+      /*  function findCombination(inputArray, targetValue)
+        {
+            var result=[];
+            for(var item= 0, maxLength = inputArray.length; item < maxLength; item++){
+                var elementArray = inputArray[item];
+                if(elementArray>targetValue)continue;
+                if(elementArray == targetValue){
+                    result.push([elementArray]);
+                continue;
+                }
+                var subResult = findCombination(inputArray.slice(item+1), targetValue-item);
+                if(!subResult.length)continue;
+
+                for(var subItem = 0, maxSubItems = subResult.length; subItem<maxSubItems;subItem++){
+                    result.push([elementArray].concat(subResult[subItem]));
+                }
+             }
+            return result;
+        }
+console.log(findCombination([1,2,3,4,5,6,7,8,9,10],10));*/
+    </script>
 </head>
 <body>
+<div class="footer">
 
+</div>
 </body>
 </html>

@@ -148,5 +148,62 @@ models.set('completed',true,{validate:true});
 
 
 //<editor-fold desc="Views">
+/*
+  Представления в Backbone не содержит html разметки. Они включают логику отображения данных моделей пользователю
+  Для этой цели используют шаблоны JS.(Underscore.js). Метод render()представления можно связать с событием change() модели
+  это дает возможность немедленно отображать изменения модели без повторного обновления страницы
+*/
+var TodoView = Backbone.View.extend({
+   tagName:'li',
+    //кеширование функции шаблона для отдельного элемента
+   todoTpl: _.template("An example template"),
+   events:{
+    'dblclick label':'edit',
+    'keypress .edit':'updateOnEnter',
+    'blur .edit':'close'
+   },
+   render: function(){
+       this.$el.html(this.todoTpl(this.model.toJSON())); // это ссылка на DOM элемент
+       this.input = this.$('.edit');
+       return this;
+   },
+    edit:function(){
 
+    },
+    close:function(){
+
+    },
+    updateOnEnter: function(e){
+
+    }
+});
+
+var view = new TodoView();
+console.log(view.el);
+
+/*
+el - ссылка на DOM элемент, п помошью свойства el  представления могут формировать содержимое своего элемента. А потом одним приемом ставляеть его в
+ DOM.
+Существет 2 способа связать DOM с представлением. 1) создать для представления новый элемент и затем добавить его в DOM.
+                                                  2) создать ссылку на уже существующий элемент страницы
+ Если нужно создать новый элемент для представления, нужно задать любое сочетание из следующих св-в представления:
+                                                     tagName, id, class name
+ Фреймворк создаст новый элемент, ссылка на который будет доступна в св-ве el. Если ничего не задано, то tagName по умолчанию div
+
+
+ */
+
+var TodosView = Backbone.View.extend({
+   tagName: 'ul',
+   className: 'container',
+   id: 'todos'
+});
+var todos = new TodosView();
+console.log(todos.el);
+
+// задание свойств el при создании представления
+console.log("--");
+var todose =new Backbone.View({el: $('.footer')});
+console.log();
 //</editor-fold>
+
