@@ -203,7 +203,94 @@ console.log(todos.el);
 
 // задание свойств el при создании представления
 console.log("--");
-var todose =new Backbone.View({el: $('.footer')});
-console.log();
-//</editor-fold>
+var todose =new Backbone.View({el: $('#footer')});
+console.log(todose.$el);
+// Свойство view.$el ==$(view.el), view.$(selector)== $(view.el).find(selector)
 
+    //<editor-fold desc="--SetElement">
+    //------------------------------------------------------------------------------SetElement-----------------------------
+    /*Для применнения существующего представления к другому DOM элементу нужно воспольз методом SetElement
+     Переопределение свойства this.el должно одновременно изменя ссылку на элемент и заново привязать события к новому элементу(отключать от старого).
+     Метод SetElement создаст кэшированную ссылку $el переместив переданные события из старого элемента в новый
+     */
+    var button1 = $('<button></button>');
+    var button2 = $('<button></button>');
+    var View = Backbone.View.extend({
+       events:{
+           click:function(e){
+               console.log(view.el === e.target);
+           }
+       }
+    });
+    var view = new View({el:button1});
+    view.setElement(button2);
+    button1.trigger('click');
+    button2.trigger('click');
+    //</editor-fold>
+    //<editor-fold desc="Render">
+      /*
+       Render - дополнительная функция, определяющая логику отображения шаблона.
+       Метод _.template библеотеки Underscore компилирует JS шаблоны в функции, которые могут вызываться при выполнении отражения.
+       Метод render передает шаблоны фттрибуты модели, связанные с представлением в формате toJson(). Шаблон возвращает свою разментку
+       после оценки выражений, содержащих заголовок модели и флаг завершения задачи.Потом передается эта разметка в кчестве HTML содержимого
+       Dom элемнта el c помошью свойства $el.
+
+       В Backbone в конце функции render() принято возвращать указатель this. Это удобно по таким причинам как:
+            1)представления можно использовать многократно в других родительских представлениях
+            2) можно создать список элементов, не прибегая к отображению и отрисовке каждого элемента в отдельности, а затем
+            единовременно отобразить весь список после его заполнения
+       */
+    var models = new Todo({
+        completed:true,
+        title:'Evgeniy'
+    });
+
+    var arrayModel = backbone.Model.extend({
+        items:[],
+      /*  defaults:{
+            items:[]
+        },*/
+        addToArray:function(model){
+            this.items.push(model);
+        }
+    });
+
+    var ItemView = Backbone.View.extend({
+      events:{},
+      render: function(){
+       this.$el.html(this.model.toJSON());
+          return this;
+      }
+    });
+
+   var todoView = Backbone.View.extend({
+       tagName:'li',
+       todoTpl: _.template($('#item-template').html()),
+        events:{
+            'dblclick label':'edit'
+        },
+        initialize:function(){
+          this.$el = $('#todo');
+        },
+        render:function(){
+            var items = this.model.get('items');
+            _.each(items, function(item){
+                var itemView = new ItemView({model:item});
+                this.$el.append(itemView.render().el);
+            }, this);
+           // this.$el.html(this.todoTpl(this.model.toJSON()));
+          //  this.input = this.$('.edit');
+            return this;
+        },
+        edit:function(){
+
+        }
+    });
+
+
+       var arra = new arrayModel();
+        arra.addToArray(models);
+    var todo = new todoView({model:arra});
+    todo.render();
+    //</editor-fold>
+//</editor-fold>
