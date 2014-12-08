@@ -246,12 +246,13 @@ console.log(todose.$el);
     });
 
     var arrayModel = backbone.Model.extend({
-        items:[],
-      /*  defaults:{
+       items:[],
+      /* defaults:{
             items:[]
         },*/
         addToArray:function(model){
-            this.items.push(model);
+            this.items.push(model.toJSON());
+            return this;
         }
     });
 
@@ -290,7 +291,192 @@ console.log(todose.$el);
 
        var arra = new arrayModel();
         arra.addToArray(models);
-    var todo = new todoView({model:arra});
-    todo.render();
+      var todo = new todoView({model:arra});
+       todo.render();
     //</editor-fold>
+
+//<editor-fold desc="Events Collections and all">
+/*
+  Набор событий позволяет подключать слушателей событий к селекторам, связанным с элементом el. Либо напрямую к элементу el при
+  отсутствии селектора. Собитие имеет вид пары значения. 'Имя_события селектор':'Функция обратного вызова'.
+  Backbone поддерживает различные типы дом событий.
+
+  Коллепкции представляют собой множества моделей и создаются путем расширения класса Backbone.Collection
+
+ */
+var Todo = Backbone.Model.extend({
+   defaults:{
+       title:'',
+       completed:false,
+       status:''
+   }
+});
+var TodosCollections = Backbone.Collection.extend({
+   model:Todo
+});
+var myTodo = new Todo({title:'Read the book', id:2});
+var todos = new TodosCollections([myTodo]);
+console.log(todos.length);
+// Добавление и удаление моделей
+var a = new Todo({title:"Item 1"}),
+    b = new Todo({title:"Item 2"}),
+    c= new Todo({title:"Item 3"});
+todos.add(a);
+todos.add(b);
+todos.remove(c);
+console.log(todos.length);
+todos.remove(a);
+console.log(todos.length);
+
+//есть огперация merge при добавлениии с одинаковыми id элементами
+
+//Считывание моделей
+/*
+Существует несколько способов считывания модели с коллекции .
+В клиен серверных приложениях коллекции содержат модели, считываемые с сервера. При обмене данными между клиентом и сервером
+необходимо уникальным образом идентиф. модели. Для этого в Backbone используются свойства id, cid, idAttribute
+Каждая модешь имеет уникальных идентификатор id, который является целым числом или строкой. У моделей также есть клиентский
+индентификатор cid, автоматически генерируемый библиотекой Backbone при создании модели. Для считывания модели можно использовать любой из идентификаторов
+
+Основное отличие между этими идентификаторами в том что cid генерируется библиотекой, это может оказатся убодным при отсутствии настоящего id
+Аттрибут idAttribute идентифицирует модель возвращаемую сервером. Это указывает билиотеке какое поле данных сервера должно использоватся
+для заполнения свойствва id. По умолчанию используется поле id. Например если сервер создает аттрибут можеди с именем userId то в определении
+модели можно установить idAttribute = userId
+ */
+
+
+if(todos.get(2) == myTodo)
+{
+    console.log("Obj ==");
+}
+
+//Прослушивание событий. Поскольку коллекции представляют собой группы элементов мы можем прослушивать события add, remove, которые происходят
+// при добавлении\удалении  элементов в коллекцию
+
+todos.on('add',function(todo){
+    console.log('We add new model to collection ');
+    console.log(todo);
+
+});
+todos.add(c);
+//Можно прослушивать изменения свойств модели в коллекции
+todos.on('change:title', function(todo){
+    console.log('Whe are chenged title in model');
+});
+
+var vModel = todos.get(2);
+vModel.set('title', "New Title");
+
+//Улучшенный пример
+todos.on({
+   'change:complete': changeComplete,
+    'chanhe:status': changeStatus
+});
+function changeComplete(){
+
+};
+function changeStatus(){
+
+};
+
+//Перезапись и обновление коллекций
+var updateCollection = new Backbone.Collection();
+updateCollection.on(["add",function(model){
+   console.log('Add new Item');
+},
+    "remove",function(model){
+   console.log('Remove Items');
+},
+    "change:completed",function(model){
+      console.log('Change Completed property');
+    }
+]);
+updateCollection.add([
+    {id:1, title:"Item 1", completed: false},
+    {id:2,title:"Item 2 ", completed: false},
+    {id:3, title:"Item3",completed:false}
+]);
+
+updateCollection.set([
+{id:1, title:"Item 1 1", completed:true},
+//{id:2,title:"Item 2 ", completed: false},
+{id:4, title:"Item4",completed:false}
+]);
+
+ //</editor-fold>
+
+//<editor-fold desc = 'Underscore'>
+//forEach
+updateCollection.set([
+    {id:1, title:"Item 3", completed: true},
+    {id:2,title:"Item 1", completed: true},
+    {id:3, title:"Item 5",completed:false},
+    {id:4, title:"Item 2", completed: true},
+    {id:5,title:"Item 4", completed: false},
+    {id:6, /*title:"Item 6",*/completed:true}
+]);
+updateCollection.forEach(function(model){
+    if(model.get('title')) {
+        console.log(model.get('title'));
+    }
+});
+
+//sortBy
+var  sortByAlphabet = updateCollection.sortBy(function(todo) {
+    if (todo.get('title')) {
+        return todo.get('title').toLowerCase();
+    }
+});
+    console.log('__________________________________________________________');
+    sortByAlphabet.forEach(function(model) {
+        if (model.get('title')) {
+            console.log(model.get('title'));
+        }
+    });
+//map()
+var count  = 1;
+console.log(updateCollection.map(function(model){
+    return count++ +". " + model.get('title');
+}));
+//Min Max
+
+console.log(updateCollection.max(function(model){
+   return model.id;
+}).id);
+
+console.log(updateCollection.min(function(model){
+    return model.id;
+}).id);
+// извлечение с коллекции заданного аттрибута
+
+var titles = updateCollection.pluck('title');
+titles.forEach(function(item){
+   console.log(item);
+});
+
 //</editor-fold>
+//</editor-fold>
+function SaveFilterModel(gridId) {
+    var filters = [];
+    var grid = window.Ext.getCmp(gridId);
+    if (grid) {
+        var enabledFilters = grid.filters.getFilterData();
+        if (enabledFilters && enabledFilters instanceof Array && enabledFilters.length > 0) {
+            for (var i = 0, maxLength = enabledFilters.length; i < maxLength; i++) {
+                var filter = enabledFilters[i];
+                if (filter) {
+                    var itemFilter = {
+                        fieldName: filter.dataIndex,
+                        operationType: filter.filterOperation,
+                        value: filter.filterValue===undefined?"":filter.filterValue,
+                        type: filter.type
+                    };
+
+                    filters.push(itemFilter);
+                }
+            }
+        }
+    }
+    if (window.Ext) {
+        window.Ext.util.Cookies.set("POsFilter",  JSON.stringify(filters));
+    }
