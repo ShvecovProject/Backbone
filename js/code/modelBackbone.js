@@ -456,27 +456,100 @@ titles.forEach(function(item){
 
 //</editor-fold>
 //</editor-fold>
-function SaveFilterModel(gridId) {
-    var filters = [];
-    var grid = window.Ext.getCmp(gridId);
-    if (grid) {
-        var enabledFilters = grid.filters.getFilterData();
-        if (enabledFilters && enabledFilters instanceof Array && enabledFilters.length > 0) {
-            for (var i = 0, maxLength = enabledFilters.length; i < maxLength; i++) {
-                var filter = enabledFilters[i];
-                if (filter) {
-                    var itemFilter = {
-                        fieldName: filter.dataIndex,
-                        operationType: filter.filterOperation,
-                        value: filter.filterValue===undefined?"":filter.filterValue,
-                        type: filter.type
-                    };
 
-                    filters.push(itemFilter);
-                }
-            }
-        }
-    }
-    if (window.Ext) {
-        window.Ext.util.Cookies.set("POsFilter",  JSON.stringify(filters));
-    }
+//Считывание моделей с сервера
+var TodosServ = backbone.Model.extend({
+   defaults:{
+       title:"",
+       completed:false
+   }
+});
+var TodosCollectionServ = backbone.Collection.extend({
+   model:TodosServ,
+    url:'/todos'
+});
+
+var todosServ = new TodosCollectionServ();
+todosServ.fetch(); //посылает запрос Http get по адресу /todos
+
+//Сохранение моделей на сервер
+/*
+Обновления моделей выполняется индивидуально с помошью метода save() модели. Когда метод save вызывается у модели которая была
+считана с сервера он формирует URL добавляя id модели к URL коллекции и посылает серверу запрос HTTP PUT
+Если новая модель - которя была созана в дбаузере у него нет id. то запрос HTTP POST посылается по адрессу URL коллекции
+Можно создать новую модель добавить ее в коллекцию и отправить на сервер с помошью вызова Collections.create().
+ */
+
+var RestFullExample = backbone.Model.extend({
+   defaults:{
+       title:"",
+       completed:false
+   }
+});
+var TodosCollectionRestFull = backbone.collection.extend({
+   model:Todo,
+    url:'/todo'
+});
+var restFullObj = new TodosCollectionRestFull();
+restFullObj.fetch();
+var todo2RestFull = restFullObj.get(2);
+todo2RestFull.set('title','go fishing');
+todo2RestFull.save();
+
+todo2RestFull.destroy();//false
+todo2RestFull.create({title:'Try out code samples'});
+
+//Удаление моделей с сервера
+todo2RestFull.destroy(); //посылает запрос HTTP delete по адресу /todo/2 и удаляет модель из коллекции
+
+// вызов destroy возвращает значение false если у модели установлен флаг isNew
+
+//Параметры
+/*
+Каждый метод принимает параметры, олнако важнее всего то что методы позволяют указывать обратные вызовы, обрабатывающие
+успешные и неуспешние операции, которые можно использовать для настройки обработки ответов сервера
+ При передаче параметра {patch:true} методу Model.save(attrs,{patch:true}) он использует запрос HTTP PATCH, что бы отправить
+  только измененные атрибуты, а не модель целиком
+ */
+//События
+/*
+Класс Backbone.Events входит в состав ряда других классов Backbone
+Backbone
+Backbone.Model
+Backbone.Collection
+Backbone.Router
+Backbone.History
+Backbone.View
+-------------------------------------------------------------------------------------------------
+on(), off() trigger()
+
+Класс Backbone.Events дает любому обьекту возможность осуществлять привязку и генерацию произвольных событий.
+Можно легко включить этот модуль в любой обьект, при этом события не обязательно обьявлять раньше чем они привязываются
+к обработчику обратного вызова
+
+var ourObject={};
+_.extend(ourObject, Backbone.Events);
+ourObject.on('dance',function(msg){
+       console.log('We triggered'+msg);
+});
+ourObject.trigger('dance','our event');
+Метод on привязывает функцию обратного вызова к обьекту.
+Обратный вызов наступает каждый раз при генерации события.
+Необходимо использовать пространства имен событий с двоеточиями, если на странице есть хотя бы несколько событий
+
+ */
+var ourObj = {};
+_.extend(ourObj, Backbone.Events);
+function dancing (msg){
+    console.log("We started"+msg); // функц
+}
+ourObj.on("all",function(eventName){
+   console.log("The name of the event passed was "+ eventName);   // будем слушать каждое событие которое наступает
+});
+ourObj.on("dance:tap",dancing); // подписали событие на обработчик
+ourObj.on("dance:break",dancing);// подписали событие на обработчик
+
+ourObj.trigger("dance:tap","tap dancing"); // генерируем событие
+ourObj.trigger("dance:break","break dancing");// генерируем событие
+
+ourObj.trigger("dance","test");
